@@ -1,0 +1,14 @@
+# Virtual environment
+venv/
+
+# ChromaDB index
+storage/
+
+# PDF files
+data/
+
+# Python cache
+__pycache__/
+*.pyc
+
+.DS_Store

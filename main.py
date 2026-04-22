@@ -1,0 +1,118 @@
+import os
+import fitz
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
+from llama_index.llms.ollama import Ollama
+from llama_index.embeddings.ollama import OllamaEmbedding
+from llama_index.vector_stores.chroma import ChromaVectorStore
+from llama_index.core import StorageContext
+from llama_index.core import PromptTemplate
+from llama_index.core.node_parser import SentenceSplitter
+import chromadb
+
+## Extract text from PDF
+doc = fitz.open('data/PanTS_Pancreatic_Tumor_Segmentation_Dataset.pdf')
+with open('data/PanTS_text_only.txt', 'w') as f:
+    for page in doc:
+        f.write(page.get_text())
+print(f"Extracted text from {len(doc)} pages")
+
+
+## Set up models
+llm = Ollama(model="llama3.1:8b", request_timeout=300.0)
+embed_model = OllamaEmbedding(model_name="nomic-embed-text")
+
+
+## Load and index
+documents = SimpleDirectoryReader("data", required_exts=[".txt"]).load_data()
+# index = VectorStoreIndex.from_documents(
+#     documents,
+#     storage_context=storage_context,
+#     embed_model=embed_model,
+#     show_progress=True
+# )
+# index = VectorStoreIndex.from_documents(
+#     documents,
+#     storage_context=storage_context,
+#     embed_model=embed_model,
+#     transformations=[SentenceSplitter(chunk_size=256, chunk_overlap=100)],  ## maybe reducing the chunks with help capture abstract idk??
+#     show_progress=True
+# )
+if os.path.exists('./storage') and os.listdir('./storage'):
+    print('Loading existing index...')
+    ## Set up ChromaDB
+    chroma_client = chromadb.PersistentClient(path="./storage")
+    chroma_collection = chroma_client.get_or_create_collection("papers")
+    vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+    storage_context = StorageContext.from_defaults(vector_store=vector_store)
+    index = VectorStoreIndex.from_vector_store(
+        vector_store,
+        embed_model=embed_model
+    )
+else:
+    print('Building new index...')
+    ## Set up ChromaDB
+    chroma_client = chromadb.PersistentClient(path="./storage")
+    chroma_collection = chroma_client.get_or_create_collection("papers")
+    vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+    storage_context = StorageContext.from_defaults(vector_store=vector_store)
+    documents = SimpleDirectoryReader('data', required_exts=['.txt']).load_data()
+    index = VectorStoreIndex.from_documents(
+        documents,
+        storage_context=storage_context,
+        embed_model=embed_model,
+        transformations=[SentenceSplitter(chunk_size=256, chunk_overlap=100)],
+        show_progress=True
+    )
+
+
+## Query
+# query_engine = index.as_query_engine(llm=llm)
+
+# qa_prompt = PromptTemplate(
+#     "You are a research assistant. Only answer using the provided context. "
+#     "If the answer is not in the context, say 'I cannot find this in the document' "
+#     "rather than guessing.\n\n"
+#     "Context: {context_str}\n\n"
+#     "Question: {query_str}\n\n"
+#     "Answer: "
+# )
+# qa_prompt = PromptTemplate(
+#     "You are a research assistant. Only answer using the provided context. "
+#     "If the answer is not in the context, say 'I cannot find this in the document' "
+#     "rather than guessing. "
+#     "If the context contains exact numbers or figures, state them exactly without approximation.\n\n"
+#     "Context: {context_str}\n\n"
+#     "Question: {query_str}\n\n"
+#     "Answer: "
+# )
+qa_prompt = PromptTemplate(
+    "You are a research assistant. Only use information from the provided context to answer. "
+    "Do not make up facts, statistics, or numbers not present in the context. "
+    "You may synthesise and summarise information from the context to answer the question. "
+    "If the answer is truly not in the context, say 'I cannot find this in the document'.\n\n"
+    "Context: {context_str}\n\n"
+    "Question: {query_str}\n\n"
+    "Answer: "
+)
+
+
+query_engine = index.as_query_engine(
+    llm=llm,
+    similarity_top_k=20,
+    text_qa_template=qa_prompt
+)
+
+
+question = "What is the abstract of the PanTS paper?"
+response = query_engine.query(question)
+print('Question: ')
+print(question)
+print('Response: ')
+print(response)
+print('Sources:')
+seen = set()
+for node in response.source_nodes:
+    filename = node.metadata.get('file_name', 'Unknown')
+    if filename not in seen:
+        print(f' - {filename}')
+        seen.add(filename)
