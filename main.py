@@ -2,8 +2,8 @@ import os
 import fitz
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 from llama_index.llms.ollama import Ollama
-# from llama_index.embeddings.ollama import OllamaEmbedding
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.embeddings.ollama import OllamaEmbedding
+# from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.core import StorageContext
 from llama_index.core import PromptTemplate
@@ -29,7 +29,8 @@ for filename in os.listdir('data'):
 
 ## Set up models
 llm = Ollama(model="llama3.2", request_timeout=300.0)
-embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
+# embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
+embed_model = OllamaEmbedding(model_name="qwen3-embedding:0.6b")
 
 
 ## Load and index
