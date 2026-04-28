@@ -103,6 +103,7 @@ else:
 qa_prompt = PromptTemplate(
     "You are a research assistant. Only use information from the provided context to answer. "
     "Do not make up facts, statistics, or numbers not present in the context. "
+    "Do not reference file names or file paths in your answer. "
     "You may synthesise and summarise information from the context to answer the question. "
     "If the answer is truly not in the context, say 'I cannot find this in the document'.\n\n"
     "Context: {context_str}\n\n"
