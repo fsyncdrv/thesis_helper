@@ -2,7 +2,8 @@ import os
 import fitz
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 from llama_index.llms.ollama import Ollama
-from llama_index.embeddings.ollama import OllamaEmbedding
+# from llama_index.embeddings.ollama import OllamaEmbedding
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.core import StorageContext
 from llama_index.core import PromptTemplate
@@ -32,8 +33,8 @@ for filename in os.listdir('data'):
 
 
 ## Set up models
-llm = Ollama(model="llama3.1:8b", request_timeout=300.0)
-embed_model = OllamaEmbedding(model_name="nomic-embed-text")
+llm = Ollama(model="llama3.2", request_timeout=300.0)
+embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
 
 
 ## Load and index
@@ -74,7 +75,7 @@ else:
         documents,
         storage_context=storage_context,
         embed_model=embed_model,
-        transformations=[SentenceSplitter(chunk_size=256, chunk_overlap=100)],
+        transformations=[SentenceSplitter(chunk_size=512, chunk_overlap=50)],
         show_progress=True
     )
 
@@ -112,7 +113,7 @@ qa_prompt = PromptTemplate(
 
 query_engine = index.as_query_engine(
     llm=llm,
-    similarity_top_k=20,
+    similarity_top_k=5,
     text_qa_template=qa_prompt
 )
 
