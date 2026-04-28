@@ -11,11 +11,6 @@ from llama_index.core.node_parser import SentenceSplitter
 import chromadb
 
 ## Extract text from PDF
-# doc = fitz.open('data/PanTS_Pancreatic_Tumor_Segmentation_Dataset.pdf')
-# with open('data/PanTS_text_only.txt', 'w') as f:
-#     for page in doc:
-#         f.write(page.get_text())
-# print(f"Extracted text from {len(doc)} pages")
 for filename in os.listdir('data'):
     if filename.endswith('.pdf'):
         txt_filename = filename.replace('.pdf', '.txt')
@@ -39,19 +34,7 @@ embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
 
 ## Load and index
 documents = SimpleDirectoryReader("data", required_exts=[".txt"]).load_data()
-# index = VectorStoreIndex.from_documents(
-#     documents,
-#     storage_context=storage_context,
-#     embed_model=embed_model,
-#     show_progress=True
-# )
-# index = VectorStoreIndex.from_documents(
-#     documents,
-#     storage_context=storage_context,
-#     embed_model=embed_model,
-#     transformations=[SentenceSplitter(chunk_size=256, chunk_overlap=100)],  ## maybe reducing the chunks with help capture abstract idk??
-#     show_progress=True
-# )
+
 if os.path.exists('./storage') and os.listdir('./storage'):
     print('Loading existing index...')
     ## Set up ChromaDB
@@ -81,25 +64,6 @@ else:
 
 
 ## Query
-# query_engine = index.as_query_engine(llm=llm)
-
-# qa_prompt = PromptTemplate(
-#     "You are a research assistant. Only answer using the provided context. "
-#     "If the answer is not in the context, say 'I cannot find this in the document' "
-#     "rather than guessing.\n\n"
-#     "Context: {context_str}\n\n"
-#     "Question: {query_str}\n\n"
-#     "Answer: "
-# )
-# qa_prompt = PromptTemplate(
-#     "You are a research assistant. Only answer using the provided context. "
-#     "If the answer is not in the context, say 'I cannot find this in the document' "
-#     "rather than guessing. "
-#     "If the context contains exact numbers or figures, state them exactly without approximation.\n\n"
-#     "Context: {context_str}\n\n"
-#     "Question: {query_str}\n\n"
-#     "Answer: "
-# )
 qa_prompt = PromptTemplate(
     "You are a research assistant. Only use information from the provided context to answer. "
     "Do not make up facts, statistics, or numbers not present in the context. "
