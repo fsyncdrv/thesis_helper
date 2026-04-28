@@ -10,11 +10,25 @@ from llama_index.core.node_parser import SentenceSplitter
 import chromadb
 
 ## Extract text from PDF
-doc = fitz.open('data/PanTS_Pancreatic_Tumor_Segmentation_Dataset.pdf')
-with open('data/PanTS_text_only.txt', 'w') as f:
-    for page in doc:
-        f.write(page.get_text())
-print(f"Extracted text from {len(doc)} pages")
+# doc = fitz.open('data/PanTS_Pancreatic_Tumor_Segmentation_Dataset.pdf')
+# with open('data/PanTS_text_only.txt', 'w') as f:
+#     for page in doc:
+#         f.write(page.get_text())
+# print(f"Extracted text from {len(doc)} pages")
+for filename in os.listdir('data'):
+    if filename.endswith('.pdf'):
+        txt_filename = filename.replace('.pdf', '.txt')
+        txt_path = f'data/{txt_filename}'
+
+        if not os.path.exists(txt_path):
+            print(f'Extracting text from {filename}...')
+            doc = fitz.open(f'data/{filename}')
+            with open(txt_path, 'w') as f:
+                for page in doc:
+                    f.write(page.get_text())
+            print(f'Done! {len(doc)} pages extracted')
+        else:
+            print(f'Text already extracted for {filename}, skipping...')
 
 
 ## Set up models
