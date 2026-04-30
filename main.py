@@ -40,7 +40,6 @@ documents = SimpleDirectoryReader("data", required_exts=[".txt"]).load_data()
 
 if os.path.exists('./storage') and os.listdir('./storage'):
     print('Loading existing index...')
-    ## Set up ChromaDB
     chroma_client = chromadb.PersistentClient(path="./storage")
     chroma_collection = chroma_client.get_or_create_collection("papers")
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
@@ -51,7 +50,6 @@ if os.path.exists('./storage') and os.listdir('./storage'):
     )
 else:
     print('Building new index...')
-    ## Set up ChromaDB
     chroma_client = chromadb.PersistentClient(path="./storage")
     chroma_collection = chroma_client.get_or_create_collection("papers")
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
