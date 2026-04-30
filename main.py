@@ -150,7 +150,6 @@ def ask_question(question):
         response = query_engine.query(question)
     return response
 
-# Main loop
 print_banner()
 
 while True:
