@@ -3,7 +3,6 @@ import fitz
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 from llama_index.llms.ollama import Ollama
 from llama_index.embeddings.ollama import OllamaEmbedding
-# from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.core import StorageContext
 from llama_index.core import PromptTemplate
@@ -17,7 +16,6 @@ from rich.spinner import Spinner
 from rich.live import Live
 
 
-## Extract text from PDF
 for filename in os.listdir('data'):
     if filename.endswith('.pdf'):
         txt_filename = filename.replace('.pdf', '.txt')
@@ -34,13 +32,10 @@ for filename in os.listdir('data'):
             print(f'Text already extracted for {filename}, skipping...')
 
 
-## Set up models
 llm = Ollama(model="llama3.2", request_timeout=300.0)
-# embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
 embed_model = OllamaEmbedding(model_name="qwen3-embedding:0.6b")
 
 
-## Load and index
 documents = SimpleDirectoryReader("data", required_exts=[".txt"]).load_data()
 
 if os.path.exists('./storage') and os.listdir('./storage'):
@@ -71,7 +66,6 @@ else:
     )
 
 
-## Query
 qa_prompt = PromptTemplate(
     "You are a research assistant. Only use information from the provided context to answer. "
     "Do not make up facts, statistics, or numbers not present in the context. "
@@ -91,7 +85,6 @@ query_engine = index.as_query_engine(
 )
 
 
-# TODO: fix the TUI
 console = Console()
 
 BANNER = r"""
