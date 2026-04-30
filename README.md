@@ -6,7 +6,7 @@ Ended up being a fun side project that taught me a lot about RAG pipelines, embe
 ![Thesis Helper TUI](assets/thesis-helper.png)
 
 ## What it does
-Thesis Helper lets you load a collection of research papers (PDFs) and ask questions about them in natural language. It was also designed to run entirely locally, thus ensuring your data remains private.
+Thesis Helper lets you load a collection of research papers (PDFs) and ask questions about them in natural language through a command-line interface styled with Rich. It was designed to run entirely locally, ensuring your data remains private.
 
 ## Requirements
 - Python 3.11+
