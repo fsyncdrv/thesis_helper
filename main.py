@@ -9,6 +9,13 @@ from llama_index.core import StorageContext
 from llama_index.core import PromptTemplate
 from llama_index.core.node_parser import SentenceSplitter
 import chromadb
+import sys
+from rich.console import Console
+from rich.panel import Panel
+from rich.text import Text
+from rich.spinner import Spinner
+from rich.live import Live
+
 
 ## Extract text from PDF
 for filename in os.listdir('data'):
@@ -84,16 +91,80 @@ query_engine = index.as_query_engine(
 )
 
 
-question = "What is the abstract of the PanTS paper?"
-response = query_engine.query(question)
-print('Question: ')
-print(question)
-print('Response: ')
-print(response)
-print('Sources:')
-seen = set()
-for node in response.source_nodes:
-    filename = node.metadata.get('file_name', 'Unknown')
-    if filename not in seen:
-        print(f' - {filename}')
-        seen.add(filename)
+# TODO: fix the TUI
+console = Console()
+
+BANNER = """
+
+  *      *    '    o     .          '  '               '
+    '         '         .        +                           .+
+                '     '   |             . '  *   .
+         | +            --o--          *   +          .
+  o     -o-      .        |           .    .       .+        +
+  ________              _         __  __     __
+ /_  __/ /_  ___  _____(_)____   / / / /__  / /___  ___  _____
+  / / / __ \/ _ \/ ___/ / ___/  / /_/ / _ \/ / __ \/ _ \/ ___/
+ / / / / / /  __(__  ) (__  )  / __  /  __/ / /_/ /  __/ /
+/_/ /_/ /_/\___/____/_/____/  /_/ /_/\___/_/ .___/\___/_/
+                                          /_/
+        .         '     .  (   )                          '
+ +~~                         `-'               .          .
+           .      .    +                '        +
+            .      +                 *   .+
+             .o   +                           '    '
+             . o                     ' '           '
+
+"""
+
+def print_banner():
+    console.print(BANNER, style="bold cyan")
+    console.print(Panel(
+        "[bold white]Ask questions about your loaded research papers[/bold white]\n[dim]Type 'quit' to exit[/dim]",
+        style="cyan",
+        padding=(1, 4)
+    ))
+
+def print_answer(response):
+    console.print(Panel(
+        response.response,
+        title="[bold green]💡 Answer[/bold green]",
+        style="green",
+        padding=(1, 2)
+    ))
+
+def print_sources(response):
+    seen = set()
+    for node in response.source_nodes:
+        filename = node.metadata.get('file_name', 'Unknown')
+        if filename not in seen:
+            console.print(Panel(
+                f"[dim]{node.text[:300]}...[/dim]",
+                title=f"[bold yellow]📄 {filename}[/bold yellow]",
+                style="yellow",
+                padding=(1, 2)
+            ))
+            seen.add(filename)
+
+def ask_question(question):
+    with Live(Spinner("dots", text="[cyan]Thinking...[/cyan]"), refresh_per_second=10):
+        response = query_engine.query(question)
+    return response
+
+# Main loop
+print_banner()
+
+while True:
+    console.print("\n[bold cyan]❓ Question:[/bold cyan] ", end="")
+    question = input().strip()
+
+    if not question:
+        continue
+
+    if question.lower() == 'quit':
+        console.print("\n[bold cyan]Goodbye! 👋[/bold cyan]\n")
+        sys.exit(0)
+
+    response = ask_question(question)
+    print_answer(response)
+    print_sources(response)
+    console.print("[dim]" + "─" * 60 + "[/dim]")
